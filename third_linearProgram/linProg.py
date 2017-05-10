@@ -63,8 +63,8 @@ for i,j in pairwiseTerms:
             conditionVector = np.zeros([c.size + 1])
             for l in range(noLabels):
                 conditionVector[pairwiseIndex[i,j,k,l]] = sign
-            A = np.append(A, conditionVector)
-            b = np.append(b, sign)
+            A = np.vstack(A, conditionVector)
+            b = np.vstack(b, sign)
 
 
 print(A)
