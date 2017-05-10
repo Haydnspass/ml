@@ -3,7 +3,7 @@ import numpy as np
 import copy
 
 
-def phiP(v1, v2, beta = 1):
+def phiP(v1, v2, beta=1):
     if v1 == v2:
         return 0
     else:
@@ -23,28 +23,32 @@ c = np.ndarray([0])
 # hard coding of unaries
 # i, j, k, l
 c = np.append(c, 0.1)
-unaryIndex[0, 0, 0, 0] = c.size
+unaryIndex[0, 0, 0, 0] = c.size - 1
 
 c = np.append(c, 0.1)
-unaryIndex[0, 0, 1, 1] = c.size
+unaryIndex[0, 0, 1, 1] = c.size - 1
 
 c = np.append(c, 0.1)
-unaryIndex[1, 1, 0, 0] = c.size
+unaryIndex[1, 1, 0, 0] = c.size - 1
 
 c = np.append(c, 0.9)
-unaryIndex[1, 1, 1, 1] = c.size
+unaryIndex[1, 1, 1, 1] = c.size - 1
 
 c = np.append(c, 0.9)
-unaryIndex[2, 2, 0, 0] = c.size
+unaryIndex[2, 2, 0, 0] = c.size - 1
 
 c = np.append(c, 0.1)
-unaryIndex[2, 2, 1, 1] = c.size
+unaryIndex[2, 2, 1, 1] = c.size - 1
+
+noUnaries = int(c.size / noLabels)
+unaryIndex = unaryIndex.astype(int)
 
 def insertPairwise(c, pairwiseIndex, i, j):
     for k in range(noLabels):
         for l in range(noLabels):
             c = np.append(c, phiP(k, l))
-            pairwiseIndex[i, j, k, l] = c.size
+            pairwiseIndex[i, j, k, l] = c.size - 1
+            pairwiseIndex = pairwiseIndex.astype(int)
     return c, pairwiseIndex
 
 # append pairwise
@@ -56,18 +60,46 @@ for i,j in pairwiseTerms:
 b = np.ndarray([0])
 A = np.ndarray([0, c.size])
 
+# unary conditions
+for sign in [1, -1]:
+    for i in range(noUnaries):
+        conditionVector = np.zeros([c.size])
+        for k in range(noLabels):
+            conditionVector[unaryIndex[i,i,k,k]] = sign
+        A = np.vstack((A, conditionVector))
+        b = np.append(b, sign)
+
+
 # pairwise conditions
-for i,j in pairwiseTerms:
-    for k in range(noLabels):
-        for sign in [1]:
-            conditionVector = np.zeros([c.size + 1])
+for sign in [1,-1]:
+    for i,j in pairwiseTerms:
+        for k in range(noLabels):
+            conditionVector = np.zeros([c.size])
             for l in range(noLabels):
                 conditionVector[pairwiseIndex[i,j,k,l]] = sign
-            A = np.vstack(A, conditionVector)
-            b = np.vstack(b, sign)
+            A = np.vstack((A, conditionVector))
+            b = np.append(b, sign)
+
+for sign in [1,-1]:
+    for i,j in pairwiseTerms:
+        for l in range(noLabels):
+            conditionVector = np.zeros([c.size])
+            for k in range(noLabels):
+                conditionVector[pairwiseIndex[i,j,k,l]] = sign
+            A = np.vstack((A, conditionVector))
+            b = np.append(b, sign)
 
 
+'''print(c)
 print(A)
+print(b)
+print(A.shape)
+print(b.shape)
+print(c.shape)
+'''
+
+res = optimize.linprog(c, A_ub = A, b_ub = b, bounds = ([0,1]), options = {"disp": True})
+print(res)
 
 '''
 
