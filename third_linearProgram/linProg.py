@@ -77,8 +77,9 @@ for sign in [1,-1]:
             conditionVector = np.zeros([c.size])
             for l in range(noLabels):
                 conditionVector[pairwiseIndex[i,j,k,l]] = sign
+            conditionVector[unaryIndex[i, i, k, k]] = -sign
             A = np.vstack((A, conditionVector))
-            b = np.append(b, sign)
+            b = np.append(b, 0)
 
 for sign in [1,-1]:
     for i,j in pairwiseTerms:
@@ -86,8 +87,9 @@ for sign in [1,-1]:
             conditionVector = np.zeros([c.size])
             for k in range(noLabels):
                 conditionVector[pairwiseIndex[i,j,k,l]] = sign
+            conditionVector[unaryIndex[j, j, l, l]] = -sign
             A = np.vstack((A, conditionVector))
-            b = np.append(b, sign)
+            b = np.append(b, 0)
 
 
 '''print(c)
