@@ -59,7 +59,7 @@ A = np.ndarray([0, c.size])
 # pairwise conditions
 for i,j in pairwiseTerms:
     for k in range(noLabels):
-        for sign in [-1, 1]:
+        for sign in [1]:
             conditionVector = np.zeros([c.size + 1])
             for l in range(noLabels):
                 conditionVector[pairwiseIndex[i,j,k,l]] = sign
