@@ -92,55 +92,12 @@ for sign in [1,-1]:
             b = np.append(b, 0)
 
 
-'''print(c)
+'''
+print(c)
 print(A)
 print(b)
-print(A.shape)
-print(b.shape)
-print(c.shape)
 '''
 
 res = optimize.linprog(c, A_ub = A, b_ub = b, bounds = ([0,1]), options = {"disp": True})
 print(res)
 
-'''
-
-noVars = 3
-noUnaries = noVars
-noPairwise = noVars
-noLabels = 2
-labels = [0, 1]
-
-lengthMu = noUnaries * noLabels + noPairwise * noLabels ** 2
-# length c = length mu
-
-
-# set conditions
-# conditions for unaries
-for i in range(numUnaries)
-    # sum must be smaller than one
-    conditionVector = np.zeros([lengthMu])
-    conditionVector[2i:2i + 2] = 1
-    A = np.append(A, conditionVector)
-    b = np.append(b, 1)
-
-    # sum must be greater than one
-    conditionVector = np.zeros([lengthMu])
-    conditionVector[2i:2i + 2] = -1
-    A = np.append(A, conditionVector)
-    b = np.append(b, -1)
-
-# conditions for pairwise
-for i in range()
-
-
-
-print(c)
-
-#A = [[1, 1, 0, 0, 0, 0], [-1, -1, 0, 0, 0, 0], [0, 0, 1, 1, 0, 0], [0, 0, -1, -1, 0, 0], [0, 0, 0, 0, 1, 1], [0, 0, 0, 0, -1, -1]]
-#b = [1, -1, 1, -1, 1, -1]
-
-
-#res = optimize.linprog(c, A_ub = A, b_ub = b, bounds = ([0,1]), options = {"disp": True})
-#print(res)
-'''
