@@ -3,6 +3,7 @@ from scipy import optimize
 import math
 import numpy as np
 import copy
+import heapq
 
 class Edge:
     def __init__(self, pointer, value):
@@ -27,7 +28,20 @@ class Node:
         if Neighbour != None:
             if self.StartPoint == False and Neighbour.EndPoint == False:
                 potential = phiP(self.Identifier[1], Neighbour.Identifier[1]) + Neighbour.Unary
-                self.Joint.append(Edge([Neighbour.Identifier], potential))
+                self.Joint.append(Edge(Neighbour.Identifier, potential))
+
+
+def dijkstra(graph, start, end):
+    queue, seen = [(0, start, [])], set()
+    while True:
+        (cost, v, path) = heapq.heappop(queue)
+        if v not in seen:
+            path = path + [v]
+            seen.add(v)
+            if v == end:
+                return cost, path
+            for (next, c) in graph[v].items():
+                heapq.heappush(queue, (cost + c, next, path))
 
 noNodes = 20
 labels = [0, 1]
@@ -92,4 +106,16 @@ graph[noNodes - 1, 1].Joint.append(Edge([indexOfEnd,0], 0))
 
 #graph[i for i in range(noNodes * noLabels + 2) if graph[i,0].StartPoint == True,0]
 
-print('done')
+graphDict = {}
+for i in range(graph.shape[0]):
+    for j in range(graph.shape[1]):
+        currNode = graph[i,j]
+        nodeDict = {}
+        if currNode != None:
+            for k in range(np.size(currNode.Joint)):
+                currJoint = currNode.Joint[k]
+                nodeDict[(currJoint.PointedNode[0], currJoint.PointedNode[1])] = currJoint.Phi
+            graphDict[(i, j)] = nodeDict
+
+cost, path = dijkstra(graphDict, (indexOfStart,0), (indexOfEnd,0))
+print(cost, path)
