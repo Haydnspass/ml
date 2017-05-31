@@ -4,85 +4,92 @@ import math
 import numpy as np
 import copy
 
+class Edge:
+    def __init__(self, pointer, value):
+        self.PointedNode = pointer
+        self.Phi = value
 
-def phiP(v1, v2, alpha=0, beta=1):
-    if v1 == v2:
-        return alpha
-    else:
-        return beta
+class Node:
+    def __init__(self, identifier, unary, startPoint = False, endPoint = False):
+        self.Identifier = identifier
+        self.Unary = unary
+        self.StartPoint = startPoint
+        self.EndPoint = endPoint
 
+        self.Joint = [ ]
 
-# [i, l], [i, l], unaries
-def calcAddDist(unaries, u, v=None):
-    # not feasable
-    if (v == None) and (u[0] == 0 or u[0] == unaries.shape[0]):
-        dist = unaries[u[0],u[1]]
-    # for source / target
-    elif v == None:
-        dist = math.inf
-    # not feasable
-    elif np.abs(u[0] - v[0]) > 0:
-        dist = math.inf
-    # neighbour case
-    else:
-        dist = unaries[u[0],u[1]] + phiP(u[1], v[1])
+    def constructEdges(self, Neighbour):
+        def phiP(v1, v2, alpha=0, beta=1):
+            if v1 == v2:
+                return alpha
+            else:
+                return beta
+        if Neighbour != None:
+            if self.StartPoint == False and Neighbour.EndPoint == False:
+                potential = phiP(self.Identifier[1], Neighbour.Identifier[1]) + Neighbour.Unary
+                self.Joint.append(Edge([Neighbour.Identifier], potential))
 
-    return dist
-
-
-# build model
 noNodes = 20
-noLabels = 2
+labels = [0, 1]
+noLabels = np.size(labels)
+graph = np.ndarray((noNodes + 2, noLabels),dtype=np.object)
 
-# call with unaries[index of Unarie, [index of label]]
-unaries = np.zeros((noNodes, noLabels))
-unaries[:, 0] = np.random.rand(noNodes)
-unaries[:, 1] = 1 - unaries[:, 0]
 
-# i.e. starting observation
-observation = np.zeros((noNodes))
+
+# count number of already assigned nodes
+counter = 0
+# construct real nodes (not source nor target)
 for i in range(noNodes):
-    if (unaries[i, 0] > 0.5):
-        observation[i] = 0
-    else:
-        observation[i] = 1
+    for l in range(noLabels):
+        # shuffle for first label
+        if l == 0:
+            rN = np.random.rand(1)
+        else:
+            rN = 1 - graph[i,0].Unary
+
+        graph[i,l] = Node([i,l], rN)
+        counter += 1
+
+# reserve source and target
+i += 1
+graph[i, 0] = Node([i,0], math.nan, True, False)
+indexOfStart = i
+potential = graph[0,0].Unary
+graph[i, 0].Joint.append(Edge([0,0], potential))
+potential = graph[0,1].Unary
+graph[i, 0].Joint.append(Edge([0,1], potential))
 
 
-def dijkstraAttempt(noNodes, noLabels):
-    # initalize
-    Q = []
-    dist = np.ones((noNodes, noLabels)) * math.inf
-    prev = np.ones((noNodes, noLabels)) * math.nan
-    for i in range(noNodes):
-        for l in range(noLabels):
-            dist[i, l] = math.inf
-            prev[i, l] = math.nan
-            # add to univsited nodes
-            Q.append([i, l])
+i += 1
+counter += 1
 
-    # dist source = 0
-    while np.size(Q) > 0:
+graph[i, 0] = Node([i,0], math.nan, False, True)
+indexOfEnd = i
+counter += 1
 
-        # argmin distance of u in Q
-        distHelp = math.inf
-        uMin = math.nan
-        for u in Q:
-            if calcAddDist(unaries, u) <= distHelp:
-                uMin = u
-        Q.remove(uMin)
-        u = uMin
-        dist[u[0], u[1]] = calcAddDist(unaries, u)
+# create linearlized reference object
+graphLin = np.ndarray((noNodes * noLabels + 2),dtype=np.object)
 
-        # each neighbour, only unaries[+1, 0 or 1]
-        v0 = u[0] + 1
-        for l in range(noLabels):
-            alt = dist[u[0], u[1]] + calcAddDist(unaries, u, [v0, l])
-            if alt < dist[v0, l]:
-                dist[v0, l] = alt
-                prev[v0, l] = u
+counter = 0
+for i in range(graph.shape[0]):
+    for j in range(graph.shape[1]):
+        if graph[i,j] != None:
+            graphLin[counter] = graph[i,j]
+            graphLin[counter].LinIdentifier = counter
+            counter += 1
 
-    return dist, prev
+for i in range(graph.shape[0]):
+    if graph[i, 0] != None and i < noNodes - 1:
+        graph[i, 0].constructEdges(graph[i + 1, 0])
+        graph[i, 0].constructEdges(graph[i + 1, 1])
+    if graph[i, 1] != None and i < noNodes - 1:
+        graph[i, 1].constructEdges(graph[i + 1, 0])
+        graph[i, 1].constructEdges(graph[i + 1, 1])
 
+# hardcode for last one
+graph[noNodes - 1, 0].Joint.append(Edge([indexOfEnd,0], 0))
+graph[noNodes - 1, 1].Joint.append(Edge([indexOfEnd,0], 0))
 
-dist, prev = dijkstraAttempt(noNodes, noLabels)
-print(Q)
+#graph[i for i in range(noNodes * noLabels + 2) if graph[i,0].StartPoint == True,0]
+
+print('done')
