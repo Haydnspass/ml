@@ -54,7 +54,8 @@ graph = np.ndarray((noNodes + 2, noLabels),dtype=np.object)
 
 
 #betas
-beta = np.array((-1, -0.1, -0.01, 0.01, 0.1, 0.2, 0.5, 1))
+beta = np.array((0.01, 0.1, 0.2, 0.5, 1))
+#beta = np.array((-1, -0.1, -0.01, 0.01, 0.1, 0.2, 0.5, 1))
 for bI, bEl in enumerate(beta):
     random.seed(0)
 
@@ -65,9 +66,10 @@ for bI, bEl in enumerate(beta):
         for l in range(noLabels):
             # shuffle for first label
             if l == 0:
-                rN = random.random() * 2 - 1
+                rN = random.random()# * 2 - 1
+                rN = np.log(rN)
             else:
-                rN = 1 - graph[i,0].Unary
+                rN = 1 - np.exp(graph[i,0].Unary) #1 - graph[i,0].Unary #random.random()#1 - graph[i,0].Unary
 
             graph[i,l] = Node([i,l], rN, bEl)
             counter += 1
