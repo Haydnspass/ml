@@ -46,7 +46,7 @@ sigma = 1
 imgO = skimage.data.astronaut()
 
 # Resize the image
-imgO = scipy.misc.imresize(imgO, [100, 100, 3])
+imgO = imgO[:50,:50,:]#scipy.misc.imresize(imgO, [200, 200, 3])
 
 # Add random noise
 blur = np.round(np.random.normal(0, 25, [imgO.shape[0], imgO.shape[1], imgO.shape[2]]))
@@ -66,10 +66,10 @@ h = img.shape[1]
 
 # Initialize the matrices for the horizontal and the vertical binaries. These are further split into left, right, and
 # top, bottom.
-Dhl = np.zeros((v * h, v * h))
-Dhr = np.zeros((v * h, v * h))
-Dvt = np.zeros((v * h, v * h))
-Dvb = np.zeros((v * h, v * h))
+Dhl = sparse.csr_matrix((v * h, v * h), dtype=np.float32)
+Dhr = sparse.csr_matrix((v * h, v * h), dtype=np.float32)
+Dvt = sparse.csr_matrix((v * h, v * h), dtype=np.float32)
+Dvb = sparse.csr_matrix((v * h, v * h), dtype=np.float32)
 
 # Create a dictionary that assigns every value on the diagonal of D to a pixel within the image img
 dic = {i * h + j: (i, j) for i in range(v) for j in range(h)}
@@ -111,7 +111,8 @@ Q = np.dot(np.transpose(Dhl), Dhl) + np.dot(np.transpose(Dhr), Dhr) + np.dot(np.
 # Given the measurement, the system of linear equations can be solved to find the state that minimizes the MRF, and as
 # such, the state that the MRF holds for the most probable, given the measurement.
 
-A = sparse.csr_matrix(np.identity(v * h) + sigma ** 2 * Q)
+#A = sparse.csr_matrix(np.identity(v * h) + sigma ** 2 * Q)
+A = sparse.csr_matrix(sparse.identity(v * h) + sigma ** 2 * Q)
 
 imgR = np.reshape(imgR, (v * h, 1))
 imgG = np.reshape(imgG, (v * h, 1))
@@ -139,4 +140,4 @@ axArr[0].set_title('Ground Truth')
 axArr[1].set_title('Noisy')
 axArr[2].set_title('Outcome \n performance=%f'%(performance))
 
-#plt.show()
+plt.show()
