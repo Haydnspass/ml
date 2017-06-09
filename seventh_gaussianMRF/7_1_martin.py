@@ -12,7 +12,7 @@ import numpy as np
 
 # A measurement of the world state. Here given by an astronaut
 img = data.astronaut()
-img = misc.imresize(img, [128, 128, 3])
+img = misc.imresize(img, [80, 80, 3])
 
 # Add random noise
 blur = np.round(np.random.normal(0, 10, [img.shape[0], img.shape[1], img.shape[2]]))
@@ -92,11 +92,17 @@ imgB = np.reshape(imgB, (v, h))
 
 imgOpt = np.stack((imgR, imgG, imgB), axis=2)
 
-plt.imshow(im)
-plt.show()
+f, axArr = plt.subplots(1, 4)
 
-plt.imshow(img)
-plt.show()
+axArr[0].imshow(im)
 
-plt.imshow(imgOpt)
+axArr[1].imshow(img)
+
+
+axArr[2].imshow(imgOpt)
+
+diff = imgOpt - im
+
+axArr[3].imshow(diff)
+
 plt.show()
