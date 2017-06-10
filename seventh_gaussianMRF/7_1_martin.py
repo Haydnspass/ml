@@ -46,7 +46,7 @@ sigma = 1
 imgO = skimage.data.astronaut()
 
 # Resize the image
-imgO = imgO[:50,:50,:]#scipy.misc.imresize(imgO, [200, 200, 3])
+imgO = imgO[:100,:120,:]#scipy.misc.imresize(imgO, [200, 200, 3])
 
 # Add random noise
 blur = np.round(np.random.normal(0, 25, [imgO.shape[0], imgO.shape[1], imgO.shape[2]]))
@@ -66,43 +66,49 @@ h = img.shape[1]
 
 # Initialize the matrices for the horizontal and the vertical binaries. These are further split into left, right, and
 # top, bottom.
-Dhl = sparse.csr_matrix((v * h, v * h), dtype=np.float32)
-Dhr = sparse.csr_matrix((v * h, v * h), dtype=np.float32)
-Dvt = sparse.csr_matrix((v * h, v * h), dtype=np.float32)
-Dvb = sparse.csr_matrix((v * h, v * h), dtype=np.float32)
+Dhl = sparse.lil_matrix((v * h, v * h), dtype=np.float32)
+Dhr = sparse.lil_matrix((v * h, v * h), dtype=np.float32)
+Dvt = sparse.lil_matrix((v * h, v * h), dtype=np.float32)
+Dvb = sparse.lil_matrix((v * h, v * h), dtype=np.float32)
 
 # Create a dictionary that assigns every value on the diagonal of D to a pixel within the image img
-dic = {i * h + j: (i, j) for i in range(v) for j in range(h)}
+#dic = {i * h + j: (i, j) for i in range(v) for j in range(h)}
+
+def dicF(x, cols = imgO.shape[1]):
+    i = int(x / cols) # cuts decimal so int(3.999) = 3
+    j = int(x % cols) # modulo
+    return i,j
 
 # Next assign the correct values to the matrices for 2 next horizontal and 2 next vertical neighbors
 for i in range(v * h):
-    for j in range(v * h):
-        if i == j:
-            Dhl[i, j] = s
-            Dhr[i, j] = s
-            if i == j == 0:
-                Dhr[i, j + 1] = bilateral(img[dic[i]], img[dic[i + 1]], alpha, gamma)
-            elif i == j == v * h - 1:
-                Dhl[i, j - 1] = bilateral(img[dic[i]], img[dic[i - 1]], alpha, gamma)
-            elif (i + 1) % v == 0 and (j + 1) % h == 0:
-                Dhl[i, j - 1] = bilateral(img[dic[i]], img[dic[i - 1]], alpha, gamma)
-                Dhr[i, j + 1] = 0
-            elif (i + 1) % v == 1 and (j + 1) % h == 1:
-                Dhl[i, j - 1] = 0
-                Dhr[i, j + 1] = bilateral(img[dic[i]], img[dic[i + 1]], alpha, gamma)
-            else:
-                Dhl[i, j - 1] = bilateral(img[dic[i]], img[dic[i - 1]], alpha, gamma)
-                Dhr[i, j + 1] = bilateral(img[dic[i]], img[dic[i + 1]], alpha, gamma)
+    j = i
+    #for j in range(v * h):
+    if i == j:
+        Dhl[i, j] = s
+        Dhr[i, j] = s
 
-for i in range(v * h):
-    for j in range(v * h):
-        if i == j:
-            Dvt[i, j] = s
-            Dvb[i, j] = s
-            if j - h >= 0:
-                Dvt[i, j - h] = bilateral(img[dic[i]], img[dic[i - h]], alpha, gamma)
-            if j + h < v * h:
-                Dvb[i, j + h] = bilateral(img[dic[i]], img[dic[i + h]], alpha, gamma)
+        Dvt[i, j] = s
+        Dvb[i, j] = s
+        if j - h >= 0:
+            Dvt[i, j - h] = bilateral(img[dicF(i)], img[dicF(i - h)], alpha, gamma)
+        if j + h < v * h:
+            Dvb[i, j + h] = bilateral(img[dicF(i)], img[dicF(i + h)], alpha, gamma)
+
+
+        if i == j == 0:
+            Dhr[i, j + 1] = bilateral(img[dicF(i)], img[dicF(i + 1)], alpha, gamma)
+        elif i == j == v * h - 1:
+            Dhl[i, j - 1] = bilateral(img[dicF(i)], img[dicF(i - 1)], alpha, gamma)
+        elif (i + 1) % v == 0 and (j + 1) % h == 0:
+            Dhl[i, j - 1] = bilateral(img[dicF(i)], img[dicF(i - 1)], alpha, gamma)
+            Dhr[i, j + 1] = 0
+        elif (i + 1) % v == 1 and (j + 1) % h == 1:
+            Dhl[i, j - 1] = 0
+            Dhr[i, j + 1] = bilateral(img[dicF(i)], img[dicF(i + 1)], alpha, gamma)
+        else:
+            Dhl[i, j - 1] = bilateral(img[dicF(i)], img[dicF(i - 1)], alpha, gamma)
+            Dhr[i, j + 1] = bilateral(img[dicF(i)], img[dicF(i + 1)], alpha, gamma)
+
 
 # np.dot(A, B) returns a matrix multiplication...
 Q = np.dot(np.transpose(Dhl), Dhl) + np.dot(np.transpose(Dhr), Dhr) + np.dot(np.transpose(Dvt), Dvt) + np.dot(
